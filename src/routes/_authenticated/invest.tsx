@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Sparkles, TrendingUp, Crown, Sprout } from "lucide-react";
+import { CalendarDays, Cpu, Pickaxe, Timer, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fmt, fmtKes, USD_TO_KES_RATE } from "@/lib/auth";
 import { calculateInvestmentPlanMetrics } from "@/lib/investment-withdrawal";
@@ -21,21 +21,28 @@ type Plan = {
 
 type PaymentMethod = "mpesa" | "balance";
 
-const USD_PLAN_NAMES = {
-  bronze: "BRONZE",
-  silver: "SILVER",
-  gold: "GOLD",
-};
-
-const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  sprout: Sprout, "trending-up": TrendingUp, crown: Crown, sparkles: Sparkles,
-};
-
 const AMOUNT_TIERS = [100, 250, 500];
 
 function formatInvestmentAmount(amount: number | string) {
   const usd = Number(amount || 0);
   return `${fmt(usd)} (${fmtKes(usd * USD_TO_KES_RATE)})`;
+}
+
+function getPlanVariant(name: string) {
+  const normalized = name.toLowerCase();
+  if (normalized.includes("silver") || normalized.includes("standard") || normalized.includes("growth")) return "mid" as const;
+  if (normalized.includes("gold") || normalized.includes("premium") || normalized.includes("pro")) return "pro" as const;
+  return "entry" as const;
+}
+
+function PlanMetric({ icon: Icon, label, value, detail }: { icon: typeof Timer; label: string; value: string; detail?: string }) {
+  return (
+    <div className="rig-stat-row">
+      <span className="rig-stat-icon"><Icon /></span>
+      <dt className="rig-stat-name">{label}</dt>
+      <dd className="rig-stat-value">{value}{detail && <small>{detail}</small>}</dd>
+    </div>
+  );
 }
 
 function getPlanRoi(plan: Pick<Plan, "roi_percent" | "daily_return_percent" | "duration_days">) {
@@ -164,28 +171,41 @@ function InvestPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="rig-tiers">
         {plans.map(p => {
-          const Icon = ICONS[p.icon] ?? Sparkles;
           const active = selected?.id === p.id;
+          const amount = getDefaultAmount(p);
+          const dailyAccrual = amount * Number(p.daily_return_percent) / 100;
+          const totalProfit = dailyAccrual * Number(p.duration_days);
+          const variant = getPlanVariant(p.name);
+          const progress = variant === "entry" ? 68 : variant === "mid" ? 52 : 37;
           return (
-            <button key={p.id} type="button" onClick={() => { setSelected(p); setAmount(getDefaultAmount(p)); }}
-              className={`rounded-2xl border p-6 text-left transition-all hover:-translate-y-1 ${active ? "border-primary bg-primary/10 shadow-[var(--shadow-gold)]" : "border-border/60 bg-card"}`}>
-              <div className="flex items-center justify-between">
-                <div className="grid h-10 w-10 place-items-center rounded-xl" style={{ backgroundColor: `${p.color}22`, color: p.color }}>
-                  <Icon className="h-5 w-5" />
+            <button key={p.id} type="button" aria-pressed={active} onClick={() => { setSelected(p); setAmount(amount); }}
+              className={`rig-tier rig-tier-${variant} cursor-pointer text-left ${active ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}`}>
+              <div className="rig-tier-top">
+                <div className="rig-visual" aria-hidden="true">
+                  <Cpu className="rig-machine" />
+                  <span className="rig-coin">$</span>
                 </div>
-                <span className="text-xs font-semibold uppercase text-muted-foreground">{p.duration_days} days</span>
+                <div className="rig-tier-info">
+                  <span className="rig-badge">{p.name.toUpperCase()} PLAN</span>
+                  <div className="rig-price">{fmt(amount)}</div>
+                </div>
               </div>
-              <div className="mt-4 text-lg font-bold">{p.name}</div>
-              <div className="text-sm text-muted-foreground">{p.description}</div>
-              <div className="mt-4 flex items-baseline gap-2">
-                <span className="text-2xl font-black text-primary">20%</span>
-                <span className="text-xs text-muted-foreground">weekly profit</span>
+
+              <div className="rig-progress">
+                <div className="rig-progress-label"><span>Mining Progress</span><b>{progress}%</b></div>
+                <div className="rig-progress-track"><div className="rig-progress-fill" style={{ width: `${progress}%` }} /></div>
               </div>
-              <div className="mt-2 min-w-0 break-words text-xs leading-5 text-muted-foreground">
-                {formatInvestmentAmount(p.min_amount)} – {p.max_amount ? formatInvestmentAmount(p.max_amount) : "∞"}
-              </div>
+
+              <dl className="rig-stat-rows">
+                <PlanMetric icon={Timer} label="Daily Return" value={`${Number(p.daily_return_percent).toFixed(2)}%`} detail={`(${fmt(dailyAccrual)})`} />
+                <PlanMetric icon={Timer} label={`Total Profit (${p.duration_days} Days)`} value={`${(Number(p.daily_return_percent) * Number(p.duration_days)).toFixed(2)}%`} detail={`(${fmt(totalProfit)})`} />
+                <PlanMetric icon={CalendarDays} label="Mining Duration" value={`${p.duration_days} Days`} />
+                <PlanMetric icon={Zap} label="Mining Power" value={variant === "entry" ? "Low" : variant === "mid" ? "Medium" : "High"} />
+              </dl>
+
+              <div className="rig-mine-button"><Pickaxe /> Mining in Progress</div>
             </button>
           );
         })}

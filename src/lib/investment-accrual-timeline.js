@@ -1,5 +1,4 @@
 const DAY_MS = 24 * 60 * 60 * 1000;
-const CYCLE_DAYS = 7;
 
 function asNumber(value, fallback = 0) {
   const number = Number(value);
@@ -20,12 +19,16 @@ function durationOf(investment) {
   return Math.max(1, asNumber(investment?.term_days || investment?.duration_days, 90));
 }
 
+function cycleDaysOf(investment) {
+  return Math.max(1, asNumber(investment?.cycle_days, 7));
+}
+
 function dailyProfitOf(investment) {
   const direct = asNumber(investment?.daily_profit || investment?.daily_return);
   if (direct > 0) return direct;
   const weekly = asNumber(investment?.weekly_profit);
-  if (weekly > 0) return weekly / CYCLE_DAYS;
-  return asNumber(investment?.plan_amount) * asNumber(investment?.profit_rate || investment?.roi_percent) / 100 / CYCLE_DAYS;
+  if (weekly > 0) return weekly / cycleDaysOf(investment);
+  return asNumber(investment?.plan_amount) * asNumber(investment?.profit_rate || investment?.roi_percent) / 100 / cycleDaysOf(investment);
 }
 
 function cycleBounds(investment, now) {
@@ -34,15 +37,17 @@ function cycleBounds(investment, now) {
   const configuredEnd = validDate(investment?.current_cycle_end);
   if (configuredStart && configuredEnd) return { start: configuredStart, end: configuredEnd };
   if (!start) return { start: null, end: null };
-  const elapsedCycles = Math.max(0, Math.floor((now.getTime() - start.getTime()) / (CYCLE_DAYS * DAY_MS)));
-  const currentStart = new Date(start.getTime() + elapsedCycles * CYCLE_DAYS * DAY_MS);
-  return { start: currentStart, end: new Date(currentStart.getTime() + CYCLE_DAYS * DAY_MS) };
+  const cycleDays = cycleDaysOf(investment);
+  const elapsedCycles = Math.max(0, Math.floor((now.getTime() - start.getTime()) / (cycleDays * DAY_MS)));
+  const currentStart = new Date(start.getTime() + elapsedCycles * cycleDays * DAY_MS);
+  return { start: currentStart, end: new Date(currentStart.getTime() + cycleDays * DAY_MS) };
 }
 
 function cycleDay(investment, timestamp) {
   const bounds = cycleBounds(investment, timestamp);
+  const cycleDays = cycleDaysOf(investment);
   if (!bounds.start) return 1;
-  return Math.min(CYCLE_DAYS, Math.max(1, Math.ceil((timestamp.getTime() - bounds.start.getTime()) / DAY_MS) + 1));
+  return Math.min(cycleDays, Math.max(1, Math.ceil((timestamp.getTime() - bounds.start.getTime()) / DAY_MS) + 1));
 }
 
 function recordedDailyRows(investment, rows) {
@@ -93,19 +98,21 @@ export function getInvestmentAccrualTimeline(investment, earningRows = [], now =
   }
 
   const windowStart = filterStart(current, filter);
-  return points.filter((point) => !windowStart || new Date(point.timestamp) >= windowStart);
+  const filteredPoints = points.filter((point) => !windowStart || new Date(point.timestamp) >= windowStart);
+  return filteredPoints.length > 0 ? filteredPoints : points.slice(-1);
 }
 
 export function getInvestmentEarningsSnapshot(investment, earningRows = [], now = new Date()) {
   const current = validDate(now) || new Date();
   const timeline = getInvestmentAccrualTimeline(investment, earningRows, current, "ALL");
   const bounds = cycleBounds(investment, current);
+  const cycleDays = cycleDaysOf(investment);
   const dailyProfit = dailyProfitOf(investment);
-  const weeklyProfit = asNumber(investment?.weekly_profit) || dailyProfit * CYCLE_DAYS;
+  const cycleProfit = asNumber(investment?.weekly_profit) || dailyProfit * cycleDays;
   const latest = timeline[timeline.length - 1];
   const cycleStart = bounds.start || current;
-  const cycleDayNumber = Math.min(CYCLE_DAYS, Math.max(1, Math.ceil((current.getTime() - cycleStart.getTime()) / DAY_MS) + 1));
-  const cycleEarnings = Math.min(weeklyProfit, dailyProfit * cycleDayNumber);
+  const cycleDayNumber = Math.min(cycleDays, Math.max(1, Math.ceil((current.getTime() - cycleStart.getTime()) / DAY_MS) + 1));
+  const cycleEarnings = Math.min(cycleProfit, dailyProfit * cycleDayNumber);
   const status = investment?.status === "completed" || investment?.status === "matured"
     ? "matured"
     : investment?.status === "active"
@@ -115,12 +122,13 @@ export function getInvestmentEarningsSnapshot(investment, earningRows = [], now 
   return {
     currentEarnings: latest?.dailyAccrual || 0,
     dailyAccrual: dailyProfit,
-    weeklyEarnings: weeklyProfit,
+    weeklyEarnings: cycleProfit,
+    cycleDays,
     totalAccrued: asNumber(investment?.total_accrued_profit) || latest?.accruedProfit || 0,
-    nextPayout: weeklyProfit,
+    nextPayout: cycleProfit,
     cycleDay: cycleDayNumber,
     cycleEarnings,
-    cycleTotal: weeklyProfit,
+    cycleTotal: cycleProfit,
     cycleStart,
     cycleEnd: bounds.end,
     status,

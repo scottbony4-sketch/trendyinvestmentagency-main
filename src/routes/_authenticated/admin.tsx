@@ -71,6 +71,18 @@ function nairobiWeekday(): number {
   return map[s] ?? 1;
 }
 
+function generatePayoutMpesaCode(withdrawalId: string): string {
+  const timePart = Date.now().toString(36).toUpperCase();
+  const idPart = withdrawalId.replaceAll("-", "").slice(0, 4).toUpperCase();
+  return `TRDY${timePart}${idPart}`;
+}
+
+function generatePayoutAdminNote(withdrawal: WithdrawalRow, feePercent: number, fee: number, netAmount: number): string {
+  const requested = fmt(Number(withdrawal.amount));
+  const destination = withdrawal.mpesa_phone || "unknown number";
+  return `Auto-generated payout record: ${requested} requested, ${fmt(fee)} fee (${feePercent}%), ${fmt(netAmount)} net payout sent to ${destination} on ${new Date().toLocaleString()}.`;
+}
+
 function getFriendlyErrorMessage(error: { message?: string } | null, fallback = "The request could not be completed.") {
   if (!error?.message) return fallback;
   const message = error.message.toLowerCase();
@@ -1411,8 +1423,13 @@ function WithdrawalsTab({ withdrawals, profiles, settings, onFinalize, onRefresh
 
   const openFor = (w: WithdrawalRow) => {
     setSelected(w);
-    setPayCode(w.payout_mpesa_code || "");
-    setNote(w.admin_note || "");
+    const feeEnabled = settings?.withdrawal_fee_enabled !== false;
+    const feePercent = feeEnabled ? Number(settings?.withdrawal_fee_percent ?? 5) : 0;
+    const requestedAmount = Number(w.amount);
+    const fee = Number(((requestedAmount * feePercent) / 100).toFixed(2));
+    const netAmount = Number((requestedAmount - fee).toFixed(2));
+    setPayCode(w.payout_mpesa_code || (w.status === "pending" ? generatePayoutMpesaCode(w.id) : ""));
+    setNote(w.admin_note || (w.status === "pending" ? generatePayoutAdminNote(w, feePercent, fee, netAmount) : ""));
   };
 
   const markPaid = async () => {
