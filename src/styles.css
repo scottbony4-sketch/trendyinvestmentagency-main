@@ -1,0 +1,249 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design system definition.
+ *
+ * The @theme inline block maps CSS custom properties to Tailwind utility
+ * classes (e.g. --color-primary -> bg-primary, text-primary).
+ *
+ * The :root and .dark blocks define the actual color values using oklch.
+ * All colors MUST use oklch format.
+ *
+ * To add a new semantic color:
+ * 1. Add the variable to :root (light value) and .dark (dark value)
+ * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: #010202;
+  --foreground: #e3e5e7;
+  --card: #11161d;
+  --card-foreground: #e3e5e7;
+  --popover: #151b22;
+  --popover-foreground: #e3e5e7;
+  --primary: #04ee68;
+  --primary-foreground: #010202;
+  --secondary: #171d25;
+  --secondary-foreground: #e3e5e7;
+  --muted: #171d25;
+  --muted-foreground: #9aa4b2;
+  --accent: #04ee68;
+  --accent-foreground: #010202;
+  --destructive: #ff4d5a;
+  --destructive-foreground: #fff;
+  --border: #2e3644;
+  --input: #2e3644;
+  --ring: #04ee68;
+  --chart-1: #04ee68;
+  --chart-2: #3b9cff;
+  --chart-3: #ffb020;
+  --chart-4: #ff4d5a;
+  --chart-5: #8b949e;
+  --sidebar: #080b0f;
+  --sidebar-foreground: #e3e5e7;
+  --sidebar-primary: #04ee68;
+  --sidebar-primary-foreground: #010202;
+  --sidebar-accent: #11161d;
+  --sidebar-accent-foreground: #e3e5e7;
+  --sidebar-border: #2e3644;
+  --sidebar-ring: #04ee68;
+  --gradient-hero: radial-gradient(circle at top right, rgba(4,238,104,0.055), transparent 35%);
+  --gradient-gold: linear-gradient(135deg, #04ee68, #39ff88);
+  --shadow-gold: 0 10px 30px -18px rgba(4,238,104,0.45);
+}
+
+.dark {
+  --background: #010202;
+  --foreground: #e3e5e7;
+  --card: #11161d;
+  --card-foreground: #e3e5e7;
+  --popover: #151b22;
+  --popover-foreground: #e3e5e7;
+  --primary: #04ee68;
+  --primary-foreground: #010202;
+  --secondary: #171d25;
+  --secondary-foreground: #e3e5e7;
+  --muted: #171d25;
+  --muted-foreground: #9aa4b2;
+  --accent: #04ee68;
+  --accent-foreground: #010202;
+  --destructive: #ff4d5a;
+  --destructive-foreground: #fff;
+  --border: #2e3644;
+  --input: #2e3644;
+  --ring: #04ee68;
+  --chart-1: #04ee68;
+  --chart-2: #3b9cff;
+  --chart-3: #ffb020;
+  --chart-4: #ff4d5a;
+  --chart-5: #8b949e;
+  --sidebar: #080b0f;
+  --sidebar-foreground: #e3e5e7;
+  --sidebar-primary: #04ee68;
+  --sidebar-primary-foreground: #010202;
+  --sidebar-accent: #11161d;
+  --sidebar-accent-foreground: #e3e5e7;
+  --sidebar-border: #2e3644;
+  --sidebar-ring: #04ee68;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    font-size: 15px;
+  }
+
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at top right, rgba(4,238,104,0.055), transparent 35%),
+      radial-gradient(circle at bottom left, rgba(4,238,104,0.025), transparent 40%),
+      #010202;
+    color: var(--color-foreground);
+    font-family: Inter, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  @media (max-width: 640px) {
+    html {
+      font-size: 14px;
+    }
+
+    body {
+      font-size: 14px;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      min-height: 2.75rem;
+    }
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+
+  a {
+    transition: color 0.2s ease, opacity 0.2s ease;
+  }
+}
+
+@layer components {
+  /* Card */
+  .card {
+    background: #11161d;
+    color: var(--color-card-foreground);
+    border: 1px solid #2e3644;
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 28px -18px rgba(0,0,0,0.7);
+    padding: 1rem;
+  }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items:center; justify-content:center; gap: .5rem; border-radius: .75rem; padding: .7rem 1rem; font-weight:600; line-height:1; transition: transform .15s ease, box-shadow .15s ease, background-color .2s ease, border-color .2s ease; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  a:focus-visible { outline: 2px solid rgba(234, 179, 8, 0.7); outline-offset: 2px; }
+  .btn-primary { background: #04ee68; color: #010202; box-shadow: var(--shadow-gold); }
+  .btn-ghost { background: transparent; border: 1px solid var(--color-border); color: var(--color-foreground); }
+
+  /* Input */
+  .form-input { background: var(--color-input); border: 1px solid var(--color-border); color: var(--color-foreground); padding: .5rem .75rem; border-radius: .5rem; }
+  .form-input:focus,
+  input:focus,
+  textarea:focus,
+  select:focus {
+    outline: none;
+    border-color: rgba(4, 238, 104, 0.75);
+    box-shadow: 0 0 0 3px rgba(4, 238, 104, 0.12);
+  }
+
+  /* Status badges */
+  .badge { display:inline-flex; align-items:center; gap:.4rem; padding:.15rem .5rem; border-radius:999px; font-size:.75rem; font-weight:700; }
+  .badge-pending { background: rgba(234,179,8,0.08); color: #EAB308; }
+  .badge-approved { background: rgba(16,185,129,0.08); color: #10B981; }
+  .badge-rejected { background: rgba(239,68,68,0.08); color: #EF4444; }
+  .badge-active { background: rgba(59,130,246,0.08); color: #3B82F6; }
+  .badge-completed { background: rgba(148,163,184,0.08); color: #94A3B8; }
+  .badge-paid { background: rgba(234,179,8,0.08); color: #EAB308; }
+  .badge-suspended { background: rgba(107,114,128,0.08); color: #6B7280; }
+  .badge-deleted { background: rgba(239,68,68,0.05); color: #B91C1C; }
+
+  /* Responsive table wrapper */
+  .table-responsive { width:100%; overflow:auto; border-radius: var(--radius-md); }
+
+  /* Navbar mobile menu */
+  .mobile-menu { position: absolute; right: 1rem; top: 56px; background: var(--color-card); border:1px solid var(--color-border); border-radius: .5rem; padding:.5rem; box-shadow: 0 12px 30px rgba(0,0,0,0.35); z-index:60; }
+
+  /* Premium dashboard cards */
+  .dashboard-shell {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.92));
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    box-shadow: 0 20px 40px -24px rgba(15, 23, 42, 0.9);
+  }
+
+  /* WhatsApp FAB refinement */
+  .whatsapp-fab { position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: 60; height: 56px; width: 56px; display:flex; align-items:center; justify-content:center; border-radius:999px; box-shadow: var(--shadow-gold); }
+}
+
+@layer utilities {
+  .text-muted { color: var(--muted-foreground); }
+}

@@ -1,0 +1,1 @@
+ALTER TABLE public.withdrawals ADD COLUMN IF NOT EXISTS payout_mpesa_code text;
